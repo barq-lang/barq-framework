@@ -242,5 +242,46 @@ class ProjectApp(unittest.TestCase):
         self.assertEqual(self.barq("main.bq")[1], "true 3 AppServiceProvider + salaam from Barq Test App\n")
 
 
+class NewProject(unittest.TestCase):
+    """barq new with barq-framework: the User model, migration, factory and seeder work as written."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="barq-new-")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_new_project(self):
+        app = os.path.join(self.dir, "shop")
+        code, out, err = devtest.barq_cli("new", "shop", cwd=self.dir)
+        self.assertEqual(code, 0, err)
+        self.assertIn("barq migrate", out)
+        for rel in ("app/Models/User.bq", "app/Providers/AppServiceProvider.bq", "database/factories/UserFactory.bq",
+                    "database/seeders/DatabaseSeeder.bq"):
+            self.assertTrue(os.path.isfile(os.path.join(app, rel)), rel)
+        self.assertEqual(len(glob.glob(os.path.join(app, "database", "migrations", "*_create_users_table.bq"))), 1)
+        self.assertEqual(devtest.barq_cli("fmt", "--check", ".", cwd=app)[0], 0)
+        with open(os.path.join(app, "count.bq"), "w") as f:
+            f.write(PRINT_USERS)
+        for engine in ENGINES:
+            with self.subTest(engine=engine):
+                flag = "--interp" if engine == "tree" else "--vm"
+                code, out, err = devtest.barq_cli("migrate:fresh", "--seed", *(["--interp"] if engine == "tree" else []), cwd=app)
+                self.assertEqual(code, 0, out + err)
+                code, out, err = devtest.barq_cli("run", flag, "count.bq", cwd=app)
+                self.assertEqual((code, out), (0, "3\n"), err)
+                code, out, err = devtest.barq_cli("test", flag, cwd=app)
+                self.assertEqual(code, 0, out + err)
+        code, _, err = devtest.barq_cli("new", "tool", "--console", cwd=self.dir)
+        self.assertEqual(code, 0, err)
+        self.assertFalse(os.path.exists(os.path.join(self.dir, "tool", "database")))
+
+
+PRINT_USERS = """use App\\Models\\User
+
+print(User.count())
+"""
+
+
 if __name__ == "__main__":
     unittest.main()

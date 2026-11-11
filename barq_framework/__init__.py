@@ -6,7 +6,7 @@ barq checkout, or is listed in BARQ_PATH (see barq/plugins.py).
 """
 
 NAME = "barq-framework"
-__version__ = "0.18.0-alpha"
+__version__ = "0.20.0-alpha"
 REQUIRES = []
 
 USAGE = """
@@ -50,6 +50,11 @@ def cmd_schedule(cmd, args):
     if fn is None:
         return None
     return run_in_project(fn, engine_of(args))
+
+
+def new_project(files, opts):
+    from .commands import new_project as run
+    run(files, opts)
 
 
 def boot(interp):
@@ -104,4 +109,5 @@ def register(hooks):
     for name in ("schedule:run", "schedule:list", "schedule:work"):
         hooks.add_command(name, cmd_schedule)
     hooks.add_prefix_command("make:", cmd_make)
+    hooks.NEW_PROJECT.append(new_project)
     hooks.USAGE.append(USAGE)

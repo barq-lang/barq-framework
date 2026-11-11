@@ -484,3 +484,75 @@ def cmd_make(kind, args):
     if kind == "resource":
         return write_new(path, stub_resource(name, ns))
     return write_new(path, stub_middleware(name, ns))
+
+
+NEW_USER_MODEL = '''namespace App\\Models
+
+class User extends Model
+
+    protected list<string> fillable = #["name", "email"]
+    protected list<string> hidden = #["password"]
+'''
+
+NEW_USERS_MIGRATION = '''namespace Database\\Migrations
+
+class CreateUsersTable extends Migration
+
+    #[Public]
+    #[void]
+    karo up(Schema schema)
+        schema.create("users", karo(Blueprint table): void
+            table.id()
+            table.string("name")
+            table.string("email").unique()
+            table.string("password")
+            table.timestamps()
+        )
+
+    #[Public]
+    #[void]
+    karo down(Schema schema)
+        schema.dropIfExists("users")
+'''
+
+NEW_USER_FACTORY = '''namespace Database\\Factories
+
+// Makes App\\Models\\User: User.factory().count(3).create()
+class UserFactory extends Factory
+
+    #[Public]
+    #[dict<string, any>]
+    karo definition()
+        return #{
+            "name": Fake.name(),
+            "email": Fake.unique().email(),
+            "password": Hash.password("password")
+        }
+'''
+
+NEW_SEEDER = '''namespace Database\\Seeders
+
+use App\\Models\\User
+
+class DatabaseSeeder extends Seeder
+
+    // barq db:seed (or barq migrate:fresh --seed)
+    #[Public]
+    #[void]
+    karo run()
+        User.factory().count(3).create()
+'''
+
+
+def new_project(files, opts):
+    """barq new: a service provider, plus the User model, its migration, factory and seeder.
+    With --auth, barq-auth's auth:install writes the User model and users table instead."""
+    if opts["kind"] == "console":
+        return
+    files["app/Providers/AppServiceProvider.bq"] = stub_provider("AppServiceProvider", "App\\Providers")
+    files["database/factories/UserFactory.bq"] = NEW_USER_FACTORY
+    files["database/seeders/DatabaseSeeder.bq"] = NEW_SEEDER
+    if not opts.get("auth"):
+        files["app/Models/User.bq"] = NEW_USER_MODEL
+        stamp = dt.datetime.now().strftime("%Y_%m_%d_000000")
+        files[f"database/migrations/{stamp}_create_users_table.bq"] = NEW_USERS_MIGRATION
