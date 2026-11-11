@@ -242,6 +242,38 @@ class ProjectApp(unittest.TestCase):
         self.assertEqual(self.barq("main.bq")[1], "true 3 AppServiceProvider + salaam from Barq Test App\n")
 
 
+class BuildProject(unittest.TestCase):
+    """barq build bundles barq-framework: migrate and db:seed work from the built folder alone."""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix="barq-build-")
+
+    def tearDown(self):
+        shutil.rmtree(self.dir, ignore_errors=True)
+
+    def test_build(self):
+        app = os.path.join(self.dir, "shop")
+        self.assertEqual(devtest.barq_cli("new", "shop", cwd=self.dir)[0], 0)
+        with open(os.path.join(app, "count.bq"), "w") as f:
+            f.write(PRINT_USERS)
+        code, out, err = devtest.barq_cli("build", "--with-env", cwd=app)
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("with barq-framework", out)
+        self.assertIn("barq migrate", out)
+        dist = os.path.join(self.dir, "deployed")
+        os.rename(os.path.join(app, "dist"), dist)
+        self.assertTrue(os.path.isfile(os.path.join(dist, "runtime", "barq-framework", "barq_framework", "__init__.py")))
+        with open(os.path.join(dist, "build.json")) as f:
+            self.assertEqual([p["module"] for p in json.load(f)["packages"]], ["barq_framework"])
+        env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": self.dir, "PYTHON": sys.executable,
+               "NO_COLOR": "1"}
+        for args, expect in ((["migrate"], "Migrated"), (["db:seed"], "Seed"), (["run", "count.bq"], "3\n")):
+            proc = subprocess.run([os.path.join(dist, "barq"), *args], capture_output=True, text=True,
+                                  env=env, timeout=60)
+            self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+            self.assertIn(expect, proc.stdout)
+
+
 class NewProject(unittest.TestCase):
     """barq new with barq-framework: the User model, migration, factory and seeder work as written."""
 
