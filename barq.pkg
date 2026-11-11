@@ -1,0 +1,7 @@
+// Read by barq install (barq 0.21+): barq install barq-lang/barq-framework
+name        = "barq-framework"
+version     = "0.21.0-alpha"
+description = "ORM, migrations, events, the container, the scheduler and make:* for Barq"
+author      = "barq-lang"
+license     = "MIT"
+requires    = #{"barq": ">=0.20.0-alpha"}

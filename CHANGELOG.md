@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.21.0-alpha — 2026-11-11
+
+- A `barq.pkg` manifest, so barq 0.21's package manager can install it into a project: `barq install barq-lang/barq-framework`.
+
 ## 0.20.0-alpha — 2026-11-11
 
 - `barq new` (barq 0.20.0) gets the framework's starter files: `app/Providers/AppServiceProvider.bq`, the `User` model, a `create_users_table` migration, `UserFactory` and `DatabaseSeeder` (left out for `--console`; with `--auth` the User model and table come from barq-auth).

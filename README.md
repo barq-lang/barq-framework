@@ -12,6 +12,8 @@ git clone https://github.com/barq-lang/barq-framework
 barq/bin/barq packages        # lists barq-framework
 ```
 
+With barq 0.21 or later you can instead run `barq install barq-lang/barq-framework` in a project: it goes into the project's `vendor/` and loads from there.
+
 The `barq` command loads packages cloned next to the `barq` checkout (or listed in `BARQ_PATH`); see [Repositories and packages](https://github.com/barq-lang/barq#repositories-and-packages).
 
 ## Tests

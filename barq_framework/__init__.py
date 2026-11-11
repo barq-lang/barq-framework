@@ -6,7 +6,7 @@ barq checkout, or is listed in BARQ_PATH (see barq/plugins.py).
 """
 
 NAME = "barq-framework"
-__version__ = "0.20.0-alpha"
+__version__ = "0.21.0-alpha"
 REQUIRES = []
 
 USAGE = """
