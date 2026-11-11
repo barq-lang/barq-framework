@@ -1,0 +1,8 @@
+namespace Database\Factories
+
+class ArticleFactory extends Factory
+
+    #[Public]
+    #[dict<string, any>]
+    karo definition()
+        return #{"title": Fake.word()}

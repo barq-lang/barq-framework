@@ -1,0 +1,6 @@
+namespace App\Models
+
+class User extends Model
+
+    protected bool softDeletes = true
+    protected list<string> fillable = #["name", "email"]

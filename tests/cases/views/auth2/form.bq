@@ -1,0 +1,7 @@
+<form method="POST" action="/profile">
+{!csrf_field()!}
+{!method_field("PUT")!}
+<input name="email" value="{old("email", "")}">
+<if condition="{errors.has("email")}"><p class="error">{errors.first("email")}</p></if>
+<if condition="{errors.any()}"><p>{errors.count()} problem(s)</p><else><p>no errors</p></if>
+</form>

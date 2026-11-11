@@ -1,0 +1,11 @@
+namespace App\Services
+
+class Clock
+
+    int ticks = 0
+
+    #[Public]
+    #[int]
+    karo tick()
+        this.ticks += 1
+        return this.ticks

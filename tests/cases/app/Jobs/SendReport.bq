@@ -1,0 +1,32 @@
+namespace App\Jobs
+
+enum Format
+    case Pdf
+    case Csv
+
+class SendReport
+    public string email = ""
+    public list<int> ids = #[]
+    public dict<int, string> labels = #{}
+    public Format format = Format::Pdf
+    public int tries = 2
+
+    #[Public]
+    #[void]
+    karo __construct(string email, list<int> ids)
+        this.email = email
+        this.ids = ids
+        this.labels = #{1: "one", 2: "two"}
+        this.format = Format::Csv
+
+    #[Public]
+    #[void]
+    karo handle()
+        if (this.email == "fail@x.co")
+            raise new Exception("mailbox full")
+        print("  report for {this.email}: {this.ids} {this.labels} {this.format.name}")
+
+    #[Public]
+    #[void]
+    karo failed(Exception e)
+        print("  failed() called:", e.message)

@@ -1,0 +1,115 @@
+// Framework part 3: the scheduler (UTC so the output never depends on the machine)
+use App\Jobs\SendReport
+
+Config.set("app.timezone", "utc")
+int monday = Date.make(2026, 11, 2, 9, 30, 0)       // Monday 2026-11-02 09:30 UTC
+int saturday = Date.make(2026, 11, 7, 23, 0, 0)
+karo show(any ts): string
+    return ts == null ? "never" : Date.format(ts, "D Y-m-d H:i")
+print(show(monday), show(saturday))
+karo noop(): void
+    return
+
+list<string> log = #[]
+Schedule.call(karo(): void
+    log.push("cleanup")
+).everyFiveMinutes().name("cleanup")
+Schedule.call(kr(): void => log.push("report")).dailyAt("09:30").description("daily report")
+Schedule.call(kr(): void => log.push("weekday")).weekdays().hourlyAt(30).name("weekday")
+Schedule.call(kr(): void => log.push("weekend")).weekends().at("23:00").name("weekend")
+Schedule.call(kr(): void => log.push("never")).everyMinute().when(false).name("off")
+Schedule.call(kr(): void => log.push("office")).everyMinute().between("09:00", "17:00").name("office")
+Schedule.call(kr(): void => log.push("night")).everyMinute().between("22:00", "06:00").name("night")
+Schedule.call(kr(): void => log.push("skip")).everyMinute().skip(kr(): bool => log.len() > 100).name("skipper")
+
+print("== expressions")
+for t in Schedule.tasks()
+    print(t.label(), "|", t.expression(), "|", t.isDue(monday), t.isDue(saturday), "| next:", show(t.nextRun(monday)))
+
+print("== run at monday 09:30")
+print(Schedule.run(monday))
+print(log)
+log.clear()
+print("== run at saturday 23:00")
+print(Schedule.run(saturday))
+print(log)
+print(Schedule.due(monday + 60).len())
+Schedule.clear()
+print(Schedule.tasks())
+
+print("== frequencies")
+dict<string, ScheduledTask> f = #{
+    "everyMinute": Schedule.call(noop).everyMinute(),
+    "everyTenMinutes": Schedule.call(noop).everyTenMinutes(),
+    "hourly": Schedule.call(noop).hourly(),
+    "everySixHours": Schedule.call(noop).everySixHours(),
+    "daily": Schedule.call(noop).daily(),
+    "twiceDaily": Schedule.call(noop).twiceDaily(1, 13),
+    "weekly": Schedule.call(noop).weekly(),
+    "weeklyOn": Schedule.call(noop).weeklyOn("friday", "17:15"),
+    "monthly": Schedule.call(noop).monthly(),
+    "monthlyOn": Schedule.call(noop).monthlyOn(15, "08:00"),
+    "quarterly": Schedule.call(noop).quarterly(),
+    "yearly": Schedule.call(noop).yearly(),
+    "mondays": Schedule.call(noop).mondays().at("07:00"),
+    "days": Schedule.call(noop).days(#["tue", 4]).at("12:00"),
+    "cron": Schedule.call(noop).cron("*/20 8-18 * jan-jun,dec 1-5"),
+    "leap": Schedule.call(noop).cron("30 2 29 2 *"),
+    "dom or dow": Schedule.call(noop).cron("0 0 13 * fri"),
+}
+for k in f
+    print(k, "|", f[k].expression(), "| next:", show(f[k].nextRun(monday)))
+print(Schedule.call(noop).dailyAt("09:00").timezone("+05:00").nextRun(monday) == Date.make(2026, 11, 3, 4, 0, 0))
+Schedule.clear()
+
+print("== hooks, failures, jobs")
+ScheduledTask hooked = Schedule.call(kr(): void => log.push("body")).everyMinute().name("hooked")
+hooked.before(kr(): void => log.push("before")).after(kr(): void => log.push("after"))
+hooked.onSuccess(kr(): void => log.push("ok"))
+ScheduledTask broken = Schedule.call(karo(): void
+    raise new Exception("disk full")
+).everyMinute().name("broken")
+broken.onFailure(kr(Exception e): void => log.push("failed: " + e.message)).after(kr(): void => log.push("after broken"))
+Queue.fake()
+Schedule.job(new SendReport("a@x.co", #[1])).everyMinute()
+Schedule.job(new SendReport("b@x.co", #[2]), "reports").everyMinute()
+log.clear()
+print(Schedule.run(monday))
+print(log)
+print(Queue.pushed().len())
+Schedule.clear()
+Schedule.call(karo(): void
+    raise new Exception("no handler")
+).everyMinute()
+try
+    Schedule.run(monday)
+except Exception as e
+    print("Exception:", e.message)
+Schedule.clear()
+
+print("== errors")
+try
+    Schedule.call(noop).cron("61 * * * *")
+except ScheduleException as e
+    print("ScheduleException:", e.message)
+try
+    Schedule.call(noop).cron("* * *")
+except ScheduleException as e
+    print("ScheduleException:", e.message)
+try
+    Schedule.call(noop).dailyAt("25:00")
+except ScheduleException as e
+    print("ScheduleException:", e.message)
+try
+    Schedule.call(noop).weeklyOn("someday")
+except ScheduleException as e
+    print("ScheduleException:", e.message)
+try
+    Schedule.job("SendReport")
+except TypeException as e
+    print("TypeException:", e.message)
+try
+    Schedule.call(noop).timezone("Mars/Base")
+except DateException as e
+    print("DateException:", e.message)
+print(Schedule.command("db:seed --class UserSeeder").label(), Schedule.exec("echo hi").kind())

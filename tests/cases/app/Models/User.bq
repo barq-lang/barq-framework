@@ -1,0 +1,32 @@
+namespace App\Models
+
+class User extends Model
+
+    protected list<string> fillable = #["name", "email", "age", "active"]
+    protected list<string> hidden = #["password"]
+    protected dict<string, string> casts = #{"active": "bool"}
+
+    #[Public]
+    #[HasMany]
+    karo posts()
+        return this.hasMany(Post)
+
+    #[Public]
+    #[HasOne]
+    karo profile()
+        return this.hasOne(Profile)
+
+    #[Public]
+    #[ModelQuery]
+    karo scopeAdults(ModelQuery q)
+        return q.where("age", ">=", 18)
+
+    #[Public]
+    #[ModelQuery]
+    karo scopeNamed(ModelQuery q, string name)
+        return q.where("name", name)
+
+    #[Public]
+    #[string]
+    karo label()
+        return "{this.name} <{this.email}>"

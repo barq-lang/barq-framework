@@ -1,0 +1,15 @@
+namespace Database\Factories
+
+use App\Models\User
+
+class PostFactory extends Factory
+
+    protected string model = 'App\Models\Post'
+
+    #[Public]
+    #[dict<string, any>]
+    karo definition()
+        return #{
+            "user_id": User.factory(),
+            "title": Fake.sentence(3)
+        }

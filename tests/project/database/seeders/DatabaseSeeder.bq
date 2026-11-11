@@ -1,0 +1,13 @@
+namespace Database\Seeders
+
+use App\Models\User
+use App\Services\Stats
+
+class DatabaseSeeder extends Seeder
+
+    #[Public]
+    #[void]
+    karo run()
+        Fake.seed(1)
+        User.factory().count(3).sequence(#{"name": "Ali"}, #{"name": "Sara"}, #{"name": "Hira"}).create()
+        print("signups seen by the listener:", app(Stats).all())

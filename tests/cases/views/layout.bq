@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><yield name="title">Barq App</yield> · {appName}</title>
+    <style>
+        body { font-family: sans-serif; }
+    </style>
+</head>
+<body>
+    <include file="partials.nav" />
+    <main>
+<yield name="content" />
+    </main>
+    <section name="footer">
+    <footer>default footer</footer>
+    </section>
+    <script>
+        const data = {!json(boot)!};
+        if (data.ok) { console.log("ready"); }
+    </script>
+</body>
+</html>

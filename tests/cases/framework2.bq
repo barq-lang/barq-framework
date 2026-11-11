@@ -1,0 +1,174 @@
+// Framework part 2: events, container, model events, soft deletes, Fake, factories
+use App\Models\User
+use App\Models\Post
+use App\Models\Article
+use App\Observers\ArticleObserver
+use App\Services\Clock
+use App\Services\Greeter
+use App\Listeners\LogSignup
+
+Database db = Database.connect("sqlite", #{"path": ":memory:"})
+Model.useConnection(db)
+Schema schema = db.schema()
+schema.create("users", karo(Blueprint t): void
+    t.id()
+    t.string("name")
+    t.string("email").unique()
+    t.string("password").nullable()
+    t.int("age").nullable()
+    t.bool("active").default(true)
+    t.timestamps()
+)
+schema.create("posts", karo(Blueprint t): void
+    t.id()
+    t.int("user_id")
+    t.string("title")
+    t.text("meta").nullable()
+    t.timestamps()
+)
+schema.create("articles", karo(Blueprint t): void
+    t.id()
+    t.int("user_id").nullable()
+    t.string("title")
+    t.timestamps()
+    t.softDeletes()
+)
+
+// ---- Event: listeners, wildcards, once, stop, listener classes
+print("== events")
+Event.listen("user.signup", kr(dict<string, any> d): string => "hello " + d["name"])
+Event.listen("user.*", karo(string name, any d): void
+    print("wildcard saw", name)
+)
+Event.once("user.signup", kr(any d): string => "first time only")
+print(Event.fire("user.signup", #{"name": "Ali"}))
+print(event("user.signup", #{"name": "Sara"}))
+print(Event.has("user.signup"), Event.has("user.login"), Event.has("user.anything"))
+Event.listen("order.placed", kr(any d): bool => false)
+Event.listen("order.placed", kr(any d): string => "never runs")
+print(Event.fire("order.placed", 1))
+Event.forget("order.placed")
+print(Event.has("order.placed"))
+
+// ---- container: bind, singleton, instance, autowiring
+print("== container")
+app().singleton(Clock)
+Greeter g1 = app().make(Greeter)
+Greeter g2 = app(Greeter)
+print(g1.greet("Ali"), "|", g2.greet("Sara"))
+print(g1 == g2, g1.clock == g2.clock)
+app().bind("greeting", kr(Container c): string => "made by a function")
+app().instance("version", "0.10")
+print(app("greeting"), app("version"), app().has("version"), app().has("nope"))
+try
+    app("nope")
+except ContainerException as e
+    print("ContainerException:", e.message)
+Event.listen("user.signup", LogSignup)
+print(Event.fire("user.signup", #{"name": "Hira"}).len())
+Event.forget("user.signup")
+Event.forget("user.*")
+
+// ---- Event.fake
+Event.fake()
+event("user.signup", #{"name": "Zara"})
+Event.assertFired("user.signup")
+Event.assertFired("user.signup", 1)
+Event.assertFired("user.signup", kr(any d): bool => d["name"] == "Zara")
+Event.assertNotFired("user.deleted")
+print("faked:", Event.fired(), Event.fired("user.signup"))
+try
+    Event.assertFired("user.deleted")
+except AssertionException as e
+    print("AssertionException:", e.message)
+
+// ---- model events: static listeners and observers
+print("== model events")
+User.creating(karo(User u): void
+    u.name = u.name.trim()
+)
+User.saved(kr(User u): void => print("saved", u.name))
+User.updating(karo(User u): any
+    if (u.getOriginal("name") == "Locked")
+        print("update refused for", u.name)
+        return false
+    return null
+)
+User.deleting(kr(User u): void => print("deleting", u.name))
+User admin = User.create(#{"name": "  Admin  ", "email": "admin@example.com"})
+print("[" + admin.name + "]")
+admin.update(#{"age": 40})
+User locked = User.create(#{"name": "Locked", "email": "locked@example.com"})
+print(locked.update(#{"name": "Changed"}), User.find(locked.id).name)
+locked.delete()
+User.flushEventListeners()
+admin.update(#{"age": 41})
+print("no listeners left")
+
+Article.observe(ArticleObserver)
+Article first = Article.create(#{"title": "first"})
+Article spam = new Article(#{"title": "spam"})
+print(spam.save(), spam.exists(), Article.count())
+
+// ---- soft deletes
+print("== soft deletes")
+Article second = Article.create(#{"title": "second"})
+Article.create(#{"title": "third"})
+print(first.delete(), first.trashed(), first.deleted_at != null)
+print(Article.count(), Article.withTrashed().count(), Article.onlyTrashed().pluck("title"))
+print(Article.find(first.id), Article.withTrashed().find(first.id).title)
+print(Article.where("title", "SECOND").orWhere("title", "FIRST").pluck("title"))
+print(first.restore(), first.trashed(), Article.count())
+Article.where("title", "THIRD").delete()
+print(Article.pluck("title"), Article.onlyTrashed().count())
+Article.onlyTrashed().restore()
+print(Article.count())
+second.forceDelete()
+print(Article.withTrashed().count(), Article.withTrashed().find(second.id))
+try
+    User.onlyTrashed()
+except TypeException as e
+    print("TypeException:", e.message.split(" (")[0])
+
+// ---- Fake: seeded, so the same every run
+print("== fake")
+Fake.seed(42)
+string a1 = Fake.name()
+int n1 = Fake.int(1, 1000)
+Fake.seed(42)
+print(a1 == Fake.name(), n1 == Fake.int(1, 1000))
+print(Fake.int(5, 5), Fake.int(3) <= 3, Fake.float(1, 2) >= 1, Fake.bool(100), Fake.bool(0))
+print(Fake.pick(#["only"]), Fake.pick("x"), Fake.words(4).len(), Fake.sentence(5).split(" ").len())
+print(Fake.uuid().len(), Fake.email().contains("@example."), Fake.slug(2).split("-").len(), Fake.hexColor().len())
+print(Fake.digits(4).len(), Fake.text(60).len() <= 60, Fake.date("Y").len(), Fake.password(10).len())
+list<int> uniq = #[]
+for k in range(10)
+    uniq.push(Fake.unique().int(1, 10))
+print(uniq.sort())
+try
+    Fake.unique().int(1, 10)
+except ValueException as e
+    print("ValueException:", e.message.split(" (")[0])
+
+// ---- factories
+print("== factories")
+User made = User.factory().make()
+print(made.exists(), made.name != "", made.age >= 18 and made.age <= 60)
+list<User> three = User.factory().count(3).create()
+print(three.len(), User.count(), three[0].exists(), list_unique(three.map(kr(User u): string => u.email)).len())
+User off = User.factory().inactive().create(#{"name": "Off"})
+print(off.name, off.active, User.find(off.id).active)
+list<User> seq = User.factory().count(4).sequence(#{"age": 20}, #{"age": 30}).create()
+print(seq.map(kr(User u): int => u.age))
+User ali = User.factory().state(kr(dict<string, any> attrs): dict<string, any> => #{"name": "Ali", "email": "ali@x.pk"}).create()
+print(ali.name, ali.email)
+Post p = Post.factory().create()
+print(p.user_id != null, User.find(p.user_id).exists(), p.title.endsWith("."))
+User author = User.factory().has(Post.factory().count(2).state(#{"title": "by factory"})).create()
+print(author.posts.len(), author.posts[0].title)
+print(Post.factory().count(2).raw().len(), Post.factory().raw(#{"title": "raw"})["title"])
+list<string> log = #[]
+User.factory().afterMaking(kr(User u): void => log.push("made")).afterCreating(kr(User u): void => log.push("created {u.id}")).create()
+print(log)
+print(Article.factory().count(2).create().len(), Article.count())
+print(User.factory(2).make().len(), User.factory().count(0).create())

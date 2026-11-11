@@ -1,0 +1,57 @@
+// FormRequest, Resource, route model binding, unique/exists rules, 201/404/422
+use App\Models\User
+use App\Models\Post
+use App\Controllers\Api\PostController
+
+Database db = Database.connect("sqlite", #{"path": ":memory:"})
+Model.useConnection(db)
+db.schema().create("users", karo(Blueprint t): void
+    t.id()
+    t.string("name")
+    t.string("email")
+    t.string("password").nullable()
+    t.int("age").nullable()
+    t.bool("active").default(true)
+    t.timestamps()
+)
+db.schema().create("posts", karo(Blueprint t): void
+    t.id()
+    t.int("user_id")
+    t.string("title")
+    t.text("meta").nullable()
+)
+User alice = User.create(#{"name": "Alice", "email": "a@example.com"})
+Post.create(#{"user_id": alice.id, "title": "first post"})
+
+Route.get("/posts", #[PostController, "index"])
+Route.get("/posts/:post", #[PostController, "show"])
+Route.post("/posts", #[PostController, "store"])
+Route.get("/raw/:id", #[PostController, "raw"])
+Route.get("/users/:user/posts", kr(User user): list<Post> => user.posts)
+
+karo show(Response r): void
+    print(r.status, r.body)
+
+TestClient c = Test.client()
+show(c.get("/posts"))
+show(c.get("/posts/1"))
+show(c.get("/posts/9"))
+show(c.get("/posts/9", #{"headers": #{"Accept": "application/json"}}))
+show(c.get("/raw/1"))
+show(c.get("/users/1/posts"))
+show(c.post("/posts", #{"title": "Hi"}))
+show(c.post("/posts", #{"title": "first post", "user_id": 1}))
+show(c.post("/posts", #{"title": "new post", "user_id": 7}))
+show(c.post("/posts", #{"title": "new post", "user_id": 1}, #{"headers": #{"X-Token": "banned"}}))
+show(c.post("/posts", #{"title": "new post", "user_id": 1}))
+print(Post.count())
+
+// an HTML form that fails validation goes back to the page it came from, with errors flashed
+Route.get("/form", kr(Request req): dict<string, any> => #{"errors": req.session().get("errors"), "old": req.session().get("old")})
+show(c.post("/posts", #{"title": "x", "user_id": 1}, #{"form": true, "headers": #{"Referer": "/form"}}))
+show(c.get("/form"))
+
+// Validation.validate understands the database rules too
+print(Validation.make(#{"email": "a@example.com"}, #{"email": "unique:users"}).errors())
+print(Validation.make(#{"email": "a@example.com"}, #{"email": "unique:users,email,1"}).passes())
+print(Validation.make(#{"id": 99}, #{"id": "exists:users"}).first())

@@ -1,0 +1,21 @@
+namespace App\Models
+
+class Post extends Model
+
+    protected list<string> guarded = #["id"]
+    protected dict<string, string> casts = #{"meta": "json"}
+
+    #[Public]
+    #[BelongsTo]
+    karo user()
+        return this.belongsTo(User)
+
+    #[Public]
+    #[BelongsToMany]
+    karo tags()
+        return this.belongsToMany(Tag)
+
+    #[Public]
+    #[HasMany]
+    karo comments()
+        return this.hasMany(Comment).orderBy("id", "desc")

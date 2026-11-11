@@ -1,0 +1,22 @@
+namespace App\Providers
+
+use App\Models\User
+use App\Observers\UserObserver
+use App\Services\Stats
+
+class AppServiceProvider extends ServiceProvider
+
+    #[Public]
+    #[void]
+    karo register()
+        this.app.singleton(Stats)
+
+    // GreetingServiceProvider.register() has run by now, even though it comes later.
+    #[Public]
+    #[void]
+    karo boot()
+        User.observe(UserObserver)
+        Event.listen("user.created", karo(User u): void
+            app(Stats).add("signup")
+        )
+        this.app.instance("booted.by", "AppServiceProvider + " + this.app.make("greeting"))

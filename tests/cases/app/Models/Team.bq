@@ -1,0 +1,5 @@
+namespace App\Models
+
+class Team extends TeamModel
+
+    protected list<string> fillable = #["name", "user_id"]

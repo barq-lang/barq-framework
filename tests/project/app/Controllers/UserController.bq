@@ -1,0 +1,35 @@
+namespace App\Controllers
+
+use App\Models\User
+use App\Services\Stats
+
+class UserController
+
+    Stats stats
+
+    #[Public]
+    #[void]
+    karo __construct(Stats stats)
+        this.stats = stats
+
+    #[Public]
+    #[any]
+    karo index()
+        this.stats.add("index")
+        return User.orderBy("id").pluck("name")
+
+    #[Public]
+    #[any]
+    karo show(User user)
+        return user
+
+    #[Public]
+    #[any]
+    karo store(Request request)
+        return User.create(request.only(#["name", "email"]))
+
+    #[Public]
+    #[any]
+    karo destroy(User user)
+        user.delete()
+        return #{"deleted": user.id, "trashed": user.trashed()}

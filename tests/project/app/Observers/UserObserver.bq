@@ -1,0 +1,10 @@
+namespace App\Observers
+
+use App\Models\User
+
+class UserObserver
+
+    #[Public]
+    #[void]
+    karo created(User user)
+        Event.fire("user.created", user)

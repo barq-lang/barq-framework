@@ -1,0 +1,6 @@
+namespace App\Models
+
+class Profile extends Model
+
+    protected string table = "user_profiles"
+    protected bool timestamps = false

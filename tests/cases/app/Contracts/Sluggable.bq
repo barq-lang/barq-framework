@@ -1,0 +1,7 @@
+namespace App\Contracts
+
+interface Sluggable
+    const SEPARATOR = "-"
+
+    #[string]
+    karo slug()

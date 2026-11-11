@@ -1,0 +1,8 @@
+namespace Database\Factories
+
+class UserFactory extends Factory
+
+    #[Public]
+    #[dict<string, any>]
+    karo definition()
+        return #{"name": Fake.firstName(), "email": Fake.unique().email()}

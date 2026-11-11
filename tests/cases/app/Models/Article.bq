@@ -1,0 +1,11 @@
+namespace App\Models
+
+class Article extends Model
+
+    protected bool softDeletes = true
+    protected list<string> fillable = #["title", "user_id"]
+
+    #[Public]
+    #[BelongsTo]
+    karo user()
+        return this.belongsTo(User)

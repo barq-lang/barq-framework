@@ -1,0 +1,18 @@
+namespace Database\Factories
+
+class UserFactory extends Factory
+
+    #[Public]
+    #[dict<string, any>]
+    karo definition()
+        return #{
+            "name": Fake.name(),
+            "email": Fake.unique().email(),
+            "age": Fake.int(18, 60),
+            "active": true
+        }
+
+    #[Public]
+    #[UserFactory]
+    karo inactive()
+        return this.state(#{"active": false})

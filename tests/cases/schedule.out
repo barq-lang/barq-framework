@@ -1,0 +1,50 @@
+Mon 2026-11-02 09:30 Sat 2026-11-07 23:00
+== expressions
+cleanup | */5 * * * * | true true | next: Mon 2026-11-02 09:35
+daily report | 30 9 * * * | true false | next: Tue 2026-11-03 09:30
+weekday | 30 * * * 1-5 | true false | next: Mon 2026-11-02 10:30
+weekend | 0 23 * * 0,6 | false true | next: Sat 2026-11-07 23:00
+off | * * * * * | true true | next: Mon 2026-11-02 09:31
+office | * * * * * | true true | next: Mon 2026-11-02 09:31
+night | * * * * * | true true | next: Mon 2026-11-02 09:31
+skipper | * * * * * | true true | next: Mon 2026-11-02 09:31
+== run at monday 09:30
+#["cleanup", "daily report", "weekday", "office", "skipper"]
+#["cleanup", "report", "weekday", "office", "skip"]
+== run at saturday 23:00
+#["cleanup", "weekend", "night", "skipper"]
+#["cleanup", "weekend", "night", "skip"]
+4
+#[]
+== frequencies
+everyMinute | * * * * * | next: Mon 2026-11-02 09:31
+everyTenMinutes | */10 * * * * | next: Mon 2026-11-02 09:40
+hourly | 0 * * * * | next: Mon 2026-11-02 10:00
+everySixHours | 0 */6 * * * | next: Mon 2026-11-02 12:00
+daily | 0 0 * * * | next: Tue 2026-11-03 00:00
+twiceDaily | 0 1,13 * * * | next: Mon 2026-11-02 13:00
+weekly | 0 0 * * 0 | next: Sun 2026-11-08 00:00
+weeklyOn | 15 17 * * 5 | next: Fri 2026-11-06 17:15
+monthly | 0 0 1 * * | next: Tue 2026-12-01 00:00
+monthlyOn | 0 8 15 * * | next: Sun 2026-11-15 08:00
+quarterly | 0 0 1 1,4,7,10 * | next: Fri 2027-01-01 00:00
+yearly | 0 0 1 1 * | next: Fri 2027-01-01 00:00
+mondays | 0 7 * * 1 | next: Mon 2026-11-09 07:00
+days | 0 12 * * 2,4 | next: Tue 2026-11-03 12:00
+cron | */20 8-18 * jan-jun,dec 1-5 | next: Tue 2026-12-01 08:00
+leap | 30 2 29 2 * | next: Tue 2028-02-29 02:30
+dom or dow | 0 0 13 * fri | next: Fri 2026-11-06 00:00
+true
+== hooks, failures, jobs
+#["hooked", "SendReport", "SendReport"]
+#["before", "body", "ok", "after", "failed: disk full", "after broken"]
+2
+Exception: no handler
+== errors
+ScheduleException: cron(): 61 is outside the minute range 0-59
+ScheduleException: cron(): a cron expression has 5 fields (minute hour day month weekday), "* * *" has 3
+ScheduleException: dailyAt(): "25:00" is not a time of day
+ScheduleException: weeklyOn(): "someday" is not a day (use 0-6 or a name like "monday")
+TypeException: Schedule.job() needs a job object with a handle() method, got string
+DateException: timezone: unknown timezone "Mars/Base" (use "utc", "local", "+05:00" or a name like "Asia/Karachi")
+barq db:seed --class UserSeeder exec

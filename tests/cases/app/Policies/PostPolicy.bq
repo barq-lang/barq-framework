@@ -1,0 +1,35 @@
+namespace App\Policies
+
+use App\Models\User
+use App\Models\Post
+
+class PostPolicy
+
+    #[Public]
+    #[any]
+    karo before(User user, string ability)
+        if user.email == "admin@x.test"
+            return true
+        return null
+
+    #[Public]
+    #[bool]
+    karo view(any user, Post post)
+        return post.title != "secret" or user != null
+
+    #[Public]
+    #[bool]
+    karo create(User user)
+        return user.age >= 18
+
+    #[Public]
+    #[bool]
+    karo update(User user, Post post)
+        return user.id == post.user_id
+
+    #[Public]
+    #[bool]
+    karo delete(User user, Post post)
+        if post.title == "locked"
+            Gate.deny("Locked posts cannot be deleted.")
+        return user.id == post.user_id

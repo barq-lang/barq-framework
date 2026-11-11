@@ -1,0 +1,178 @@
+// ORM: models, queries, relations, eager loading, scopes, casts, mass assignment
+use App\Models\User
+use App\Models\Post
+use App\Models\Tag
+use App\Models\Comment
+use App\Models\Profile
+
+Database db = Database.connect("sqlite", #{"path": ":memory:"})
+Model.useConnection(db)
+Schema schema = db.schema()
+schema.create("users", karo(Blueprint t): void
+    t.id()
+    t.string("name")
+    t.string("email").unique()
+    t.string("password").nullable()
+    t.int("age").nullable()
+    t.bool("active").default(true)
+    t.timestamps()
+)
+schema.create("posts", karo(Blueprint t): void
+    t.id()
+    t.foreignId("user_id").constrained().onDelete("cascade")
+    t.string("title")
+    t.text("meta").nullable()
+    t.timestamps()
+)
+schema.create("tags", karo(Blueprint t): void
+    t.id()
+    t.string("name")
+    t.timestamps()
+)
+schema.create("post_tag", karo(Blueprint t): void
+    t.id()
+    t.int("post_id")
+    t.int("tag_id")
+)
+schema.create("comments", karo(Blueprint t): void
+    t.id()
+    t.int("post_id")
+    t.string("body")
+)
+schema.create("user_profiles", karo(Blueprint t): void
+    t.id()
+    t.int("user_id")
+    t.string("bio")
+)
+
+// ---- naming
+print(User.tableName(), Post.tableName(), Profile.tableName())
+
+// ---- create / find / attributes
+User alice = User.create(#{"name": "Alice", "email": "alice@example.com", "age": 30})
+print(alice.id, alice.name, alice.exists(), alice.wasRecentlyCreated(), alice.created_at > 0)
+User bob = new User(#{"name": "Bob", "email": "bob@example.com", "age": 16})
+print(bob.exists(), bob.id)
+bob.save()
+print(bob.exists(), bob.id, bob.label())
+User.create(#{"name": "Cara", "email": "cara@example.com", "age": 45, "active": false})
+
+User found = User.find(1)
+print(found.name, found.active, found.is(alice), found.is(bob))
+print(User.find(99))
+print(User.count(), User.where("age", ">", 18).count(), User.max("age"))
+print(User.where("age", ">", 18).orderBy("name", "desc").pluck("name"))
+print(User.all().len(), User.first().name, User.latest("id").first().name)
+print(User.find(#[1, 3]).len())
+
+// ---- dirty tracking, save, update, refresh
+found.name = "Alice B."
+print(found.isDirty(), found.isDirty("name"), found.isDirty("email"), found.getDirty())
+found.save()
+print(found.isDirty(), User.find(1).name, found.getOriginal("name"))
+found.update(#{"age": 31})
+print(User.find(1).age)
+User.where("name", "Bob").update(#{"age": 17})
+print(bob.age, bob.refresh().age)
+
+// ---- casts: active is bool, not 1/0
+print(User.find(3).active, User.find(1).active)
+
+// ---- hidden + toArray / json
+alice = User.find(1)
+alice.password = "secret"
+alice.save()
+dict<string, any> d = alice.only("id", "name")
+print(d)
+print(alice.toArray().has("password"), alice.toArray().has("name"))
+print(Json.encode(User.find(2).only(#["name", "age"])))
+
+// ---- scopes
+print(User.adults().pluck("name"))
+print(User.query().adults().named("Cara").count())
+print(User.where("active", true).adults().pluck("name"))
+
+// ---- relations: hasMany / belongsTo
+Post p1 = alice.posts().create(#{"title": "Hello Barq", "meta": #{"draft": false, "words": 120}})
+Post p2 = alice.posts().create(#{"title": "Second post"})
+bob.posts().create(#{"title": "Bob writes"})
+print(p1.user_id, p1.meta, p1.meta["words"])
+print(Post.find(1).meta["draft"])
+print(alice.posts().count(), alice.posts().orderBy("id", "desc").first().title)
+print(alice.posts.len(), alice.posts[0].title)
+print(p2.user.name, Post.find(3).user.name)
+print(alice.posts().where("title", "like", "%Second%").pluck("title"))
+
+// ---- belongsTo associate
+Post orphan = new Post(#{"title": "Orphan"})
+orphan.user().associate(bob)
+orphan.save()
+print(orphan.user_id, orphan.user.name)
+
+// ---- hasOne
+alice.profile().create(#{"bio": "Writes Barq"})
+print(alice.profile.bio, bob.profile)
+
+// ---- belongsToMany
+Tag news = Tag.create(#{"name": "news"})
+Tag tech = Tag.create(#{"name": "tech"})
+Tag misc = Tag.create(#{"name": "misc"})
+print(p1.tags().attach(#[news, tech]))
+print(p1.tags().attach(news.id))
+print(p1.tags().pluck("name"), news.posts().pluck("title"))
+print(p1.tags().sync(#[tech.id, misc.id]))
+print(Post.find(1).tags.len(), p1.tags().detach(misc), p1.tags().count())
+
+// ---- comments with a constrained relation (orderBy desc)
+p1.comments().create(#{"body": "first"})
+p1.comments().create(#{"body": "second"})
+print(p1.comments().pluck("body"))
+
+// ---- eager loading
+list<User> users = User.with("posts", "profile").orderBy("id").get()
+for u in users
+    print(u.name, u.posts.len(), u.profile?.bio ?? "-")
+list<Post> posts = Post.with("user", "tags", "comments.post").orderBy("id").get()
+for p in posts
+    print(p.title, "by", p.user.name, "tags:", p.tags.len(), "comments:", p.comments.len())
+print(posts[0].comments[0].post.title)
+print(Json.encode(User.with("posts").find(2).toArray()["posts"].len()))
+
+// ---- firstOrCreate / updateOrCreate / destroy
+User dan = User.firstOrCreate(#{"email": "dan@example.com"}, #{"name": "Dan"})
+User dan2 = User.firstOrCreate(#{"email": "dan@example.com"}, #{"name": "Daniel"})
+print(dan.id == dan2.id, dan2.name)
+User.updateOrCreate(#{"email": "dan@example.com"}, #{"age": 50})
+print(User.where("email", "dan@example.com").value("age"))
+print(User.destroy(dan.id), User.find(dan.id))
+
+// ---- pagination
+dict<string, any> page = User.orderBy("id").paginate(2, 2)
+print(page["total"], page["page"], page["lastPage"], page["hasMore"], page["data"][0].name)
+
+// ---- delete & cascade
+print(Post.where("user_id", bob.id).count())
+print(bob.delete(), bob.exists(), User.find(bob.id))
+print(Post.where("user_id", 2).count())
+
+// ---- errors
+try
+    User.findOrFail(42)
+except ModelNotFoundException as e
+    print(e.message, e.status, e.model)
+try
+    User.create(#{"name": "X", "email": "x@example.com", "is_admin": true})
+except MassAssignmentException as e
+    print(e.message)
+try
+    print(alice.nmae)
+except NameException as e
+    print(e.message)
+try
+    Post.query().popular()
+except NameException as e
+    print(e.message)
+try
+    alice.load("nothing")
+except NameException as e
+    print(e.message)

@@ -1,0 +1,17 @@
+namespace App\Concerns
+
+use App\Contracts\Sluggable
+
+// Uses its own file's import (Sluggable) and a non-literal default.
+trait HasSlug
+    public list<string> history = #[]
+
+    #[string]
+    karo slug()
+        string s = Str.lower(this.slugSource()).replace(" ", Sluggable::SEPARATOR)
+        this.history.push(s)
+        return s
+
+    #[Abstract]
+    #[string]
+    karo slugSource()

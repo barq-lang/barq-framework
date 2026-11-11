@@ -1,0 +1,12 @@
+namespace App\Resources
+
+class PostResource extends Resource
+
+    #[Public]
+    #[dict<string, any>]
+    karo toArray()
+        return #{
+            "id": this.id,
+            "title": str_upper(this.title),
+            "author": this.user.name
+        }

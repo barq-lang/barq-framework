@@ -1,0 +1,43 @@
+// v0.12 features inside the framework: interfaces in the container,
+// defaults in autowired constructors and route handlers, traits on controllers
+
+interface Clock
+    #[int]
+    karo now()
+
+class FixedClock implements Clock
+    #[int]
+    karo now()
+        return 1000
+
+class Reporter
+    #[void]
+    karo __construct(public Clock clock, public int retries = 3, public string name = "daily")
+        return
+
+app().bind(Clock, FixedClock)
+Reporter rep = app().make(Reporter)
+print(rep.clock.now(), rep.retries, rep.name, rep.clock is Clock)
+
+trait Paginates
+    #[dict<string, int>]
+    karo pageInfo(int page, int per)
+        return #{"page": page, "per": per, "offset": (page - 1) * per}
+
+class PostController
+    use Paginates
+
+    #[dict<string, int>]
+    karo index(Request req, int page = 1, int per = 10)
+        return this.pageInfo(page, per)
+
+Route.get("/posts", #[PostController, "index"])
+Route.get("/posts/:page", #[PostController, "index"])
+Route.get("/tags/:page/:per", #[PostController, "index"])
+
+TestClient client = new TestClient()
+for path in #["/posts", "/posts/3", "/tags/2/5"]
+    print(path, client.get(path).body)
+
+print(app().call(kr(Clock c, string greeting = "hi"): string => "{greeting} at {c.now()}"))
+print(app().call(kr(Clock c, *string tags): string => Str.join(tags, ","), "a", "b"))

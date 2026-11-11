@@ -1,0 +1,2 @@
+// barq run main.bq: the providers are booted before this file runs
+print(app().isBooted(), app().providers().len(), app("booted.by"))

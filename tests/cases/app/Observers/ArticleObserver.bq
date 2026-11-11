@@ -1,0 +1,31 @@
+namespace App\Observers
+
+use App\Models\Article
+
+class ArticleObserver
+
+    list<string> log = #[]
+
+    #[Public]
+    #[any]
+    karo creating(Article a)
+        if (a.title == "spam")
+            print("observer: refused", a.title)
+            return false
+        a.title = a.title.upper()
+        return null
+
+    #[Public]
+    #[void]
+    karo created(Article a)
+        print("observer: created", a.id, a.title)
+
+    #[Public]
+    #[void]
+    karo deleted(Article a)
+        print("observer: deleted", a.id, "trashed:", a.trashed())
+
+    #[Public]
+    #[void]
+    karo restored(Article a)
+        print("observer: restored", a.id)

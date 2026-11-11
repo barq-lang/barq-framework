@@ -1,0 +1,5 @@
+<nav>
+    <each link in {links}>
+    <a href="{link.url}"<if {loop.first}> class="first"</if>>{link.label}</a>
+    </each>
+</nav>

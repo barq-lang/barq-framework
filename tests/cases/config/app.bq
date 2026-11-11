@@ -1,0 +1,5 @@
+dict<string, any> app = #{
+    "name": "Barq Shop",
+    "debug": false,
+    "mail": #{"from": "hi@shop.test", "port": 587}
+}

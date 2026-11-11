@@ -1,0 +1,6 @@
+1000 3 daily true
+/posts {"page":1,"per":10,"offset":0}
+/posts/3 {"page":3,"per":10,"offset":20}
+/tags/2/5 {"page":2,"per":5,"offset":5}
+hi at 1000
+a,b

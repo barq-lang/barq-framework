@@ -1,0 +1,8 @@
+namespace App\Models
+
+class Tag extends Model
+
+    #[Public]
+    #[BelongsToMany]
+    karo posts()
+        return this.belongsToMany(Post)

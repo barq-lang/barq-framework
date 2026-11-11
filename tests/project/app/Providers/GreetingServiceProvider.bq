@@ -1,0 +1,8 @@
+namespace App\Providers
+
+class GreetingServiceProvider extends ServiceProvider
+
+    #[Public]
+    #[void]
+    karo register()
+        this.app.bind("greeting", kr(): string => "salaam from " + Env.get("APP_NAME", "?"))

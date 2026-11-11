@@ -1,0 +1,19 @@
+namespace App\Listeners
+
+use App\Services\Greeter
+
+class LogSignup
+
+    Greeter greeter
+
+    #[Public]
+    #[void]
+    karo __construct(Greeter greeter)
+        this.greeter = greeter
+
+    #[Public]
+    #[string]
+    karo handle(dict<string, any> data)
+        string line = "listener class: " + this.greeter.greet(data["name"])
+        print(line)
+        return line

@@ -1,0 +1,5 @@
+<ul>
+<each x in {xs}>
+  <li>{x +}</li>
+</each>
+</ul>

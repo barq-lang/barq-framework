@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.barq/
+*.db
+*.sqlite
+/storage/
+/.env

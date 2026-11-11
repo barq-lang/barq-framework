@@ -1,0 +1,15 @@
+namespace App\Services
+
+class Greeter
+
+    Clock clock
+
+    #[Public]
+    #[void]
+    karo __construct(Clock clock)
+        this.clock = clock
+
+    #[Public]
+    #[string]
+    karo greet(string name)
+        return "Salaam, {name} (tick {this.clock.tick()})"

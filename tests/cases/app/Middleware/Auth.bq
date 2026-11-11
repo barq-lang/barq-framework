@@ -1,0 +1,10 @@
+namespace App\Middleware
+
+class Auth
+
+    #[Public]
+    #[any]
+    karo handle(Request req, any next)
+        if (req.header("Authorization") != "Bearer secret")
+            return Response.json(#{"error": "unauthenticated"}, 401)
+        return next(req)

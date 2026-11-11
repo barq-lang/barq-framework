@@ -1,0 +1,19 @@
+namespace Database\Migrations
+
+class CreateUsersTable extends Migration
+
+    #[Public]
+    #[void]
+    karo up(Schema schema)
+        schema.create("users", karo(Blueprint table): void
+            table.id()
+            table.string("name")
+            table.string("email").unique()
+            table.timestamps()
+            table.softDeletes()
+        )
+
+    #[Public]
+    #[void]
+    karo down(Schema schema)
+        schema.dropIfExists("users")

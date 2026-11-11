@@ -1,0 +1,56 @@
+users posts user_profiles
+1 Alice true true true
+false null
+true 2 Bob <bob@example.com>
+Alice true true false
+null
+3 2 45
+#["Cara", "Alice"]
+3 Alice Cara
+2
+true true false #{"name": "Alice B."}
+false Alice B. Alice B.
+31
+16 17
+false true
+#{"id": 1, "name": "Alice B."}
+false true
+{"name":"Bob","age":17}
+#["Alice B.", "Cara"]
+1
+#["Alice B."]
+1 #{"draft": false, "words": 120} 120
+false
+2 Second post
+2 Hello Barq
+Alice B. Bob
+#["Second post"]
+2 Bob
+Writes Barq null
+2
+0
+#["news", "tech"] #["Hello Barq"]
+#{"attached": #[3], "detached": #[1]}
+2 1 1
+#["second", "first"]
+Alice B. 2 Writes Barq
+Bob 2 -
+Cara 0 -
+Hello Barq by Alice B. tags: 1 comments: 2
+Second post by Alice B. tags: 0 comments: 0
+Bob writes by Bob tags: 0 comments: 0
+Orphan by Bob tags: 0 comments: 0
+Hello Barq
+2
+true Dan
+50
+1 null
+3 2 2 false Cara
+2
+true false null
+0
+User 42 not found 404 User
+'is_admin' is not fillable on User — add it to User.fillable
+User has no column or property 'nmae' (columns: id, name, email, password, age, active, created_at, updated_at)
+Post query has no method 'popular' (define a scope with 'karo scopePopular(ModelQuery q)' in Post)
+User has no relation 'nothing' (a method with #[HasMany], #[HasOne], #[BelongsTo] or #[BelongsToMany] and no parameters)

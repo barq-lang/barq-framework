@@ -1,0 +1,21 @@
+namespace App\Requests
+
+class StorePostRequest extends FormRequest
+
+    #[Public]
+    #[bool]
+    karo authorize()
+        return this.header("X-Token") != "banned"
+
+    #[Public]
+    #[dict<string, string>]
+    karo rules()
+        return #{
+            "title": "required|string|min:3|unique:posts",
+            "user_id": "required|int|exists:users,id"
+        }
+
+    #[Public]
+    #[dict<string, string>]
+    karo messages()
+        return #{"title.unique": "That title is taken."}

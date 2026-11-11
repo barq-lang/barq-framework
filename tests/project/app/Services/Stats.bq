@@ -1,0 +1,15 @@
+namespace App\Services
+
+class Stats
+
+    dict<string, int> counts = #{}
+
+    #[Public]
+    #[void]
+    karo add(string key)
+        this.counts[key] = this.counts.get(key, 0) + 1
+
+    #[Public]
+    #[dict<string, int>]
+    karo all()
+        return this.counts

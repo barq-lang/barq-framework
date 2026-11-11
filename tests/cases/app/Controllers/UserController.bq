@@ -1,0 +1,28 @@
+namespace App\Controllers
+
+class UserController
+
+    #[Public]
+    #[dict<string, any>]
+    karo index()
+        return #{"users": #["alice", "bob"]}
+
+    #[Public]
+    #[string]
+    karo show(int id)
+        return "user #{id}"
+
+    #[Public]
+    #[any]
+    karo store(Request req)
+        return Response.json(#{"created": req.input("name")}, 201)
+
+    #[Public]
+    #[string]
+    karo update(Request req, int id)
+        return "updated {id} via {req.method}"
+
+    #[Public]
+    #[void]
+    karo destroy(int id)
+        print("  (deleting {id})")

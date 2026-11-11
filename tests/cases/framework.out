@@ -1,0 +1,17 @@
+200 [{"id":1,"title":"FIRST POST","author":"Alice"}]
+200 {"id":1,"title":"FIRST POST","author":"Alice"}
+404 Post 9 not found
+404 {"message":"Post 9 not found"}
+200 {"id":1,"user_id":1,"title":"first post","meta":null}
+200 [{"id":1,"user_id":1,"title":"first post","meta":null}]
+422 {"message":"The title field must be at least 3 characters.","errors":{"title":["The title field must be at least 3 characters."],"user_id":["The user id field is required."]}}
+422 {"message":"That title is taken.","errors":{"title":["That title is taken."]}}
+422 {"message":"The selected user id is invalid.","errors":{"user_id":["The selected user id is invalid."]}}
+403 {"message":"This action is unauthorized."}
+201 {"id":2,"title":"NEW POST","author":"Alice"}
+2
+302 
+200 {"errors":{"title":["The title field must be at least 3 characters."]},"old":{"title":"x","user_id":"1"}}
+#{"email": #["The email has already been taken."]}
+true
+The selected id is invalid.

@@ -1,0 +1,20 @@
+<extends layout="layout" />
+{-- the user list page --}
+<section name="title">Users</section>
+
+<section name="content">
+    <h1>Users ({len(users)})</h1>
+    <if condition="{len(users) == 0}">
+    <p>No users found.</p>
+    <else>
+    <ul>
+        <each user in {users}>
+        <li class="{loop.odd ? "odd" : "even"}">{loop.number}/{loop.count} <strong>{user.name}</strong> — {user.email}<if {user?.admin ?? false}> (admin)</if></li>
+        </each>
+    </ul>
+    </if>
+    <let shown="{len(users)}" note="static text" />
+    <p>{shown} shown, {note}</p>
+    <include file="partials/card" with="{#{"title": "Tip", "body": "<b>bold</b> is escaped"}}" />
+    <include file="partials.card" with="{#{"title": "Empty"}}" />
+</section>
