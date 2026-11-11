@@ -161,7 +161,7 @@ Route.get("/posts/:post", kr(Post post): PostResource => new PostResource(post))
 ```bash
 barq make:model Post -m                       # app/Models/Post.bq + database/migrations/<time>_create_posts_table.bq
 barq make:migration add_views_to_posts_table  # an alter() stub for "posts"
-barq make:controller Api/PostController --resource
+barq make:controller Api/PostController --resource  # extends App\Controllers\Controller when app/Controllers/Controller.bq exists
 barq make:request StorePostRequest            # also make:resource, make:seeder, make:middleware
 barq migrate                                  # run pending migrations, one batch
 barq migrate:status

@@ -84,6 +84,18 @@ class ProjectCommands(unittest.TestCase):
             self.assertEqual(code, 0, err)
             self.assertTrue(out.startswith("Created "), out)
         self.assertEqual(self.barq("make:model", "Post")[0], 1)       # never overwrites
+        with open(os.path.join(self.dir, "app", "Controllers", "Api", "PostController.bq")) as f:
+            self.assertIn("\nclass PostController\n", f.read())     # no base controller in this project
+        self.write(os.path.join("app", "Controllers", "Controller.bq"),
+                   "namespace App\\Controllers\n\nabstract class Controller\n")
+        for args, head in ((("make:controller", "Admin/UserController"),
+                            "namespace App\\Controllers\\Admin\n\nuse App\\Controllers\\Controller\n\n"
+                            "class UserController extends Controller\n\n    #[Public]"),
+                           (("make:controller", "PageController", "--resource"),
+                            "namespace App\\Controllers\n\nclass PageController extends Controller\n\n    #[Public]")):
+            self.assertEqual(self.barq(*args)[0], 0)
+            with open(os.path.join(self.dir, "app", "Controllers", *args[1].split("/")) + ".bq") as f:
+                self.assertTrue(f.read().startswith(head))
         self.assertEqual(self.barq("compile", "app", "database")[0], 0)
         migrations = sorted(os.listdir(os.path.join(self.dir, "database", "migrations")))
         self.assertTrue(migrations[0].endswith("_create_posts_table.bq") and migrations[1].endswith("_add_views_to_posts_table.bq"))

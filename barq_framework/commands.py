@@ -222,21 +222,28 @@ class {cls} extends Migration
 '''
 
 
+BASE_CONTROLLER = os.path.join("app", "Controllers", "Controller.bq")
+
+
+def controller_head(name, ns):
+    """`namespace` and `class` lines; the class extends App\\Controllers\\Controller when the
+    project has one (barq new writes it), like Laravel's base controller."""
+    if name == "Controller" and ns == "App\\Controllers" or not os.path.isfile(BASE_CONTROLLER):
+        return f"namespace {ns}\n\nclass {name}\n"
+    use = "" if ns == "App\\Controllers" else "use App\\Controllers\\Controller\n\n"
+    return f"namespace {ns}\n\n{use}class {name} extends Controller\n"
+
+
 def stub_controller(name, ns, resource):
+    head = controller_head(name, ns)
     if not resource:
-        return f'''namespace {ns}
-
-class {name}
-
+        return f'''{head}
     #[Public]
     #[any]
     karo index(Request request)
         return view("welcome")
 '''
-    return f'''namespace {ns}
-
-class {name}
-
+    return f'''{head}
     #[Public]
     #[any]
     karo index()
